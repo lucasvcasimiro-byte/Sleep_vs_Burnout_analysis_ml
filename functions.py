@@ -4,11 +4,6 @@ import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix
 import seaborn as sns
 import math
-#histograms
-
-usage= pd.read_csv("Smartphone_Usage_Productivity_Dataset_50000.csv", index_col=0)
-usage.head()
-cols_number = usage.select_dtypes(include=[np.number])
 
 def box_plots(cols_number):
     cols_number.boxplot(figsize=(11, 6))
@@ -17,8 +12,30 @@ def box_plots(cols_number):
     plt.xticks(rotation=90)
     plt.show()
 
-def cor_heatmap(cols_number):
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(cols_number.corr(), annot=True, cmap='coolwarm', fmt=".2f")
-    plt.title('Correlation Heatmap of Numeric Columns')
+def corr_heatmap(dataset, cols):
+    """
+    Display correlation heatmap for numerical columns
+    """
+    # Create correlation matrix
+    corr_matrix = dataset[cols].corr()
+
+    # Create mask for heatmap
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
+    
+    # Create figure and heatmap
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(corr_matrix, 
+                annot=True, 
+                fmt='.2f', 
+                cmap='coolwarm', 
+                center=0,
+                square=True,
+                linewidths=1,
+                cbar_kws={'label': 'Correlation Coefficient'},
+                vmin=-1,
+                vmax=1
+                mask=mask)
+    
+    plt.title('Correlation Heatmap of Numeric Columns', fontsize=14, fontweight='bold')
+    plt.tight_layout()
     plt.show()

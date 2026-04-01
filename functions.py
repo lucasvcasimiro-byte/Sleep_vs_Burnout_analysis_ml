@@ -4,21 +4,127 @@ import matplotlib.pyplot as plt
 from pandas.plotting import scatter_matrix
 import seaborn as sns
 import math
-#histograms
 
-usage= pd.read_csv("Smartphone_Usage_Productivity_Dataset_50000.csv", index_col=0)
-usage.head()
-cols_number = usage.select_dtypes(include=[np.number])
+def corr_heatmap(dataset, cols):
+    """
+    Display correlation heatmap for numerical columns
+    """
+    # Create correlation matrix
+    corr_matrix = dataset[cols].corr()
 
-def box_plots(cols_number):
-    cols_number.boxplot(figsize=(11, 6))
-    #plt.yscale('log') # Makes the boxes more comparable while preserving relative differences.
-    plt.title('Boxplots for All Numeric Columns')
-    plt.xticks(rotation=90)
+    # Create mask for heatmap
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
+    
+    # Create figure and heatmap
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(corr_matrix, 
+                annot=True, 
+                fmt='.2f', 
+                cmap='coolwarm', 
+                center=0,
+                square=True,
+                linewidths=1,
+                cbar_kws={'label': 'Correlation Coefficient'},
+                vmin=-1,
+                vmax=1,
+                mask=mask)
+    
+    plt.title('Correlation Heatmap of Numeric Columns', fontsize=14, fontweight='bold')
+    plt.tight_layout()
     plt.show()
 
-def cor_heatmap(cols_number):
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(cols_number.corr(), annot=True, cmap='coolwarm', fmt=".2f")
-    plt.title('Correlation Heatmap of Numeric Columns')
+def outlier_detection(dataset, columns=None):
+    """
+    Display boxplot distributions for numerical columns.
+    
+    """
+    
+    # Select columns
+    if columns is None:
+        columns = dataset.select_dtypes(include=[np.number]).columns.tolist()
+        if 'user_id' in columns:
+            columns.remove('user_id')
+    
+    # Visualization
+    n_cols = 3
+    n_rows = math.ceil(len(columns) / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 3*n_rows))
+    
+    # Flatten axes array for easier iteration
+    if n_rows == 1 and n_cols == 1:
+        axes = [axes]
+    elif n_rows == 1 or n_cols == 1:
+        axes = axes.flatten()
+    else:
+        axes = axes.flatten()
+    
+    for idx, col in enumerate(columns):
+        ax = axes[idx]
+        ax.boxplot(dataset[col].dropna())
+        ax.set_title(f'{col}')
+        ax.set_ylabel(col)
+    
+    # Hide unused subplots
+    for idx in range(len(columns), len(axes)):
+        axes[idx].set_visible(False)
+    
+    plt.tight_layout()
     plt.show()
+
+def check_duplicates(dataset, subset=None):
+    """
+    Check for duplicate rows in the dataset.
+    """
+    
+    # Count duplicates
+    num_duplicates = dataset.duplicated(subset=subset).sum()
+    print(f"Duplicate rows: {num_duplicates}")
+
+def categorical_distributions(dataset, columns=None):
+    """
+    Display distribution of categorical variables.
+    
+    Parameters:
+    -----------
+    dataset : pd.DataFrame
+        The dataset to visualize
+    columns : list, optional
+        Specific columns to analyze. If None, uses all categorical columns
+    """
+    
+    # Select columns
+    if columns is None:
+        columns = dataset.select_dtypes(include=[object]).columns.tolist()
+    
+    if len(columns) == 0:
+        print("No categorical columns found")
+        return
+    
+    # Visualization
+    n_cols = 3
+    n_rows = math.ceil(len(columns) / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 3*n_rows))
+    
+    # Flatten axes array for easier iteration
+    if n_rows == 1 and n_cols == 1:
+        axes = [axes]
+    elif n_rows == 1 or n_cols == 1:
+        axes = axes.flatten()
+    else:
+        axes = axes.flatten()
+    
+    for idx, col in enumerate(columns):
+        ax = axes[idx]
+        dataset[col].value_counts().plot(kind='bar', ax=ax, color='steelblue')
+        ax.set_title(f'{col}')
+        ax.set_xlabel(col)
+        ax.set_ylabel('Count')
+        ax.tick_params(axis='x', rotation=45)
+    
+    # Hide unused subplots
+    for idx in range(len(columns), len(axes)):
+        axes[idx].set_visible(False)
+    
+    plt.tight_layout()
+    plt.show()
+

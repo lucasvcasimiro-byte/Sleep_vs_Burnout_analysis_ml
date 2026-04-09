@@ -128,3 +128,30 @@ def categorical_distributions(dataset, columns=None):
     plt.tight_layout()
     plt.show()
 
+def plot_distribution_grid(df, columns):
+    """Plots a grid of histograms to see data spread."""
+    plt.figure(figsize=(10, 7))
+    for i, col in enumerate(columns, 1):
+        plt.subplot(4, 4, i)
+        sns.histplot(df[col], kde=True)
+
+        plt.title(f'Distribution of {col}', fontsize=10)
+    plt.tight_layout()
+    plt.show()
+
+def plot_correlation_heatmap(df):
+    """Generates a clean, masked heatmap."""
+    corr = df.select_dtypes(include=[np.number]).corr()
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(corr, mask=mask, annot=True, fmt=".2f", cmap='coolwarm')
+    plt.title("Correlation Heatmap (Numerical Features)")
+    plt.show()
+
+def plot_scatter_insight(df, x_col, y_col, hue_col):
+    """Helps visualize potential clusters before running algorithms."""
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(data=df, x=x_col, y=y_col, hue=hue_col, alpha=0.5)
+    plt.title(f"{x_col} vs {y_col} by {hue_col}")
+    plt.show()
+

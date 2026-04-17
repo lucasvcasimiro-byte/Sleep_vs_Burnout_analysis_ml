@@ -80,6 +80,59 @@ def check_duplicates(dataset, subset=None):
     num_duplicates = dataset.duplicated(subset=subset).sum()
     print(f"Duplicate rows: {num_duplicates}")
 
+
+def encode_after_hours_work(dataset, column='after_hours_work', inplace=False):
+    """
+    Encode a binary after-hours work column into 0/1 values.
+
+    Parameters:
+    -----------
+    dataset : pd.DataFrame
+        The dataset containing the column to encode.
+    column : str
+        The column name to encode. Defaults to 'after_hours_work'.
+    inplace : bool
+        Whether to modify the input DataFrame in place. If False, returns a copy.
+
+    Returns:
+    --------
+    pd.DataFrame
+        The dataset with the encoded column.
+    """
+    if column not in dataset.columns:
+        raise ValueError(f"Column '{column}' not found in dataset")
+
+    df = dataset if inplace else dataset.copy()
+    series = df[column]
+
+    if pd.api.types.is_numeric_dtype(series):
+        unique_vals = set(series.dropna().unique())
+        if unique_vals <= {0, 1}:
+            return df
+
+    mapping = {
+        'yes': 1, 'y': 1, 'true': 1, 't': 1, '1': 1,
+        'after_hours': 1, 'afterhours': 1, 'after hours': 1,
+        'no': 0, 'n': 0, 'false': 0, 'f': 0, '0': 0,
+        'none': 0, 'no_work': 0, 'no work': 0
+    }
+
+    def encode_value(value):
+        if pd.isna(value):
+            return np.nan
+        if isinstance(value, (int, np.integer)):
+            if value in (0, 1):
+                return int(value)
+            raise ValueError(f"Unexpected numeric value {value} in column '{column}'")
+        normalized = str(value).strip().lower()
+        if normalized in mapping:
+            return mapping[normalized]
+        raise ValueError(f"Unable to encode value '{value}' in column '{column}'")
+
+    df[column] = series.map(encode_value)
+    return df
+
+
 def categorical_distributions(dataset, columns=None):
     """
     Display distribution of categorical variables.

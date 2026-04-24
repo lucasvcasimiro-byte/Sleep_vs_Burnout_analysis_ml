@@ -6,9 +6,6 @@ import seaborn as sns
 import math
 
 def corr_heatmap(dataset, cols):
-    """
-    Display correlation heatmap for numerical columns
-    """
     # Create correlation matrix
     corr_matrix = dataset[cols].corr()
 
@@ -34,10 +31,6 @@ def corr_heatmap(dataset, cols):
     plt.show()
 
 def outlier_detection(dataset, columns=None):
-    """
-    Display boxplot distributions for numerical columns.
-    
-    """
     
     # Select columns
     if columns is None:
@@ -82,23 +75,6 @@ def check_duplicates(dataset, subset=None):
 
 
 def encode_after_hours_work(dataset, column='after_hours_work', inplace=False):
-    """
-    Encode a binary after-hours work column into 0/1 values.
-
-    Parameters:
-    -----------
-    dataset : pd.DataFrame
-        The dataset containing the column to encode.
-    column : str
-        The column name to encode. Defaults to 'after_hours_work'.
-    inplace : bool
-        Whether to modify the input DataFrame in place. If False, returns a copy.
-
-    Returns:
-    --------
-    pd.DataFrame
-        The dataset with the encoded column.
-    """
     if column not in dataset.columns:
         raise ValueError(f"Column '{column}' not found in dataset")
 
@@ -134,17 +110,6 @@ def encode_after_hours_work(dataset, column='after_hours_work', inplace=False):
 
 
 def categorical_distributions(dataset, columns=None):
-    """
-    Display distribution of categorical variables.
-    
-    Parameters:
-    -----------
-    dataset : pd.DataFrame
-        The dataset to visualize
-    columns : list, optional
-        Specific columns to analyze. If None, uses all categorical columns
-    """
-    
     # Select columns
     if columns is None:
         columns = dataset.select_dtypes(include=[object]).columns.tolist()
@@ -182,7 +147,6 @@ def categorical_distributions(dataset, columns=None):
     plt.show()
 
 def plot_distribution_grid(df, columns):
-    """Plots a grid of histograms to see data spread."""
     plt.figure(figsize=(10, 7))
     for i, col in enumerate(columns, 1):
         plt.subplot(4, 4, i)
@@ -192,17 +156,17 @@ def plot_distribution_grid(df, columns):
     plt.tight_layout()
     plt.show()
 
-def plot_correlation_heatmap(df):
-    """Generates a clean, masked heatmap."""
-    corr = df.select_dtypes(include=[np.number]).corr()
+def plot_correlation_heatmap(df, columns):
+    if columns is None:
+        raise ValueError("columns must be provided for plot_correlation_heatmap")
+    corr = df[columns].corr()
     mask = np.triu(np.ones_like(corr, dtype=bool))
     plt.figure(figsize=(10, 8))
     sns.heatmap(corr, mask=mask, annot=True, fmt=".2f", cmap='coolwarm')
-    plt.title("Correlation Heatmap (Numerical Features)")
+    plt.title("Correlation Heatmap")
     plt.show()
 
 def plot_scatter_insight(df, x_col, y_col, hue_col):
-    """Helps visualize potential clusters before running algorithms."""
     plt.figure(figsize=(10, 6))
     sns.scatterplot(data=df, x=x_col, y=y_col, hue=hue_col, alpha=0.5)
     plt.title(f"{x_col} vs {y_col} by {hue_col}")

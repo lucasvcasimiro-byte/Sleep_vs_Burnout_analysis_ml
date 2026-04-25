@@ -6,9 +6,6 @@ import seaborn as sns
 import math
 
 def corr_heatmap(dataset, cols):
-    """
-    Display correlation heatmap for numerical columns
-    """
     # Create correlation matrix
     corr_matrix = dataset[cols].corr()
 
@@ -34,10 +31,6 @@ def corr_heatmap(dataset, cols):
     plt.show()
 
 def outlier_detection(dataset, columns=None):
-    """
-    Display boxplot distributions for numerical columns.
-    
-    """
     
     # Select columns
     if columns is None:
@@ -80,18 +73,43 @@ def check_duplicates(dataset, subset=None):
     num_duplicates = dataset.duplicated(subset=subset).sum()
     print(f"Duplicate rows: {num_duplicates}")
 
+
+def encode_after_hours_work(dataset, column='after_hours_work', inplace=False):
+    if column not in dataset.columns:
+        raise ValueError(f"Column '{column}' not found in dataset")
+
+    df = dataset if inplace else dataset.copy()
+    series = df[column]
+
+    if pd.api.types.is_numeric_dtype(series):
+        unique_vals = set(series.dropna().unique())
+        if unique_vals <= {0, 1}:
+            return df
+
+    mapping = {
+        'yes': 1, 'y': 1, 'true': 1, 't': 1, '1': 1,
+        'after_hours': 1, 'afterhours': 1, 'after hours': 1,
+        'no': 0, 'n': 0, 'false': 0, 'f': 0, '0': 0,
+        'none': 0, 'no_work': 0, 'no work': 0
+    }
+
+    def encode_value(value):
+        if pd.isna(value):
+            return np.nan
+        if isinstance(value, (int, np.integer)):
+            if value in (0, 1):
+                return int(value)
+            raise ValueError(f"Unexpected numeric value {value} in column '{column}'")
+        normalized = str(value).strip().lower()
+        if normalized in mapping:
+            return mapping[normalized]
+        raise ValueError(f"Unable to encode value '{value}' in column '{column}'")
+
+    df[column] = series.map(encode_value)
+    return df
+
+
 def categorical_distributions(dataset, columns=None):
-    """
-    Display distribution of categorical variables.
-    
-    Parameters:
-    -----------
-    dataset : pd.DataFrame
-        The dataset to visualize
-    columns : list, optional
-        Specific columns to analyze. If None, uses all categorical columns
-    """
-    
     # Select columns
     if columns is None:
         columns = dataset.select_dtypes(include=[object]).columns.tolist()
@@ -129,7 +147,6 @@ def categorical_distributions(dataset, columns=None):
     plt.show()
 
 def plot_distribution_grid(df, columns):
-    """Plots a grid of histograms to see data spread."""
     plt.figure(figsize=(10, 7))
     for i, col in enumerate(columns, 1):
         plt.subplot(4, 4, i)
@@ -139,17 +156,17 @@ def plot_distribution_grid(df, columns):
     plt.tight_layout()
     plt.show()
 
-def plot_correlation_heatmap(df):
-    """Generates a clean, masked heatmap."""
-    corr = df.select_dtypes(include=[np.number]).corr()
+def plot_correlation_heatmap(df, columns):
+    if columns is None:
+        raise ValueError("columns must be provided for plot_correlation_heatmap")
+    corr = df[columns].corr()
     mask = np.triu(np.ones_like(corr, dtype=bool))
     plt.figure(figsize=(10, 8))
     sns.heatmap(corr, mask=mask, annot=True, fmt=".2f", cmap='coolwarm')
-    plt.title("Correlation Heatmap (Numerical Features)")
+    plt.title("Correlation Heatmap")
     plt.show()
 
 def plot_scatter_insight(df, x_col, y_col, hue_col):
-    """Helps visualize potential clusters before running algorithms."""
     plt.figure(figsize=(10, 6))
     sns.scatterplot(data=df, x=x_col, y=y_col, hue=hue_col, alpha=0.5)
     plt.title(f"{x_col} vs {y_col} by {hue_col}")
